@@ -27,25 +27,28 @@ gpu_ind = '0'
 os.environ['CUDA_VISIBLE_DEVICES'] = gpu_ind # 0,1,2,3
 
 def main():
+
     ####################################################
     ####              Slice Optimization             ###
     ####################################################
     tau = 0.34
+    numIter = 7
     backtracking = False
     num_spokes = '400'
     reg_mode = 'RED'
     num_slices = [25]
     test_name = 'patient54'
     cnnmodel_name = 'network_A2A'
-    phase2show = 6
+    phase2show = 2
     stor_root = os.path.join('Results', test_name, reg_mode)
     data_root = os.path.join('data', test_name, num_spokes+'spokes')
     model_root = os.path.join('models', cnnmodel_name+'.h5')
-    cs2000 = sio.loadmat('data/cs2000.mat')['gt_norm']
+    cs2000 = sio.loadmat('data/cs2000.mat')['gt_norm'] #Refrence image not the groundtruth!
     
     for slices in num_slices:
-
+        
         save_path = os.path.join(stor_root, 's' + str(slices))
+        backtracking = True if numIter>9 else False
         ## Load forwardmodel
         mriObj = MRIClass(data_root, slices)
         ## MCNUFFT reconstruction
@@ -57,14 +60,14 @@ def main():
         ## A2A as initial
         xinit = recon_a2a
         ## start RARE
-        recon_rare  = RARE(mriObj, rObj, tau=tau, numIter=9, step=1/(2*tau+1), backtracking=False,
-                                accelerate=True, mode=reg_mode, useNoise=False, is_save=True, 
-                                save_path=save_path, xref=cs2000, xinit=xinit, clip=False, if_complex='complex', save_iter=1)
+        recon_rare  = RARE(mriObj, rObj, tau=tau, numIter=numIter, step=1/(2*tau+1), 
+                        backtracking=backtracking, accelerate=True, mode=reg_mode, useNoise=False, is_save=True, 
+                        save_path=save_path, xref=cs2000, xinit=xinit, clip=False, if_complex='complex', save_iter=1)
         print('\n', 'Finish processing slice: ', slices,'\n')
         
         ## Display the output images
         plot= lambda x: plt.imshow(x,cmap=plt.cm.gray,vmin=0.02,vmax=0.7)
-        cal_rPSNR = lambda x: util.cal_rPSNR(cs2000, x, phase=phase2show)
+        cal_rPSNR = lambda x: util.cal_rPSNR(cs2000, x, phase=phase2show) # Relative PSNR to the reference image, interpretation must with cautious
 
         recon_mcnufft_norm, _, _ = util.to_double(recon_mcnufft, clip=True)
         recon_mcnufft_norm = np.flip(np.abs(recon_mcnufft_norm[160:480, 160:480]), axis=1)[:,:,phase2show]
