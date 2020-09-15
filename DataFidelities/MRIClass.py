@@ -13,7 +13,6 @@ from util import *
 
 class MRIClass(object):
     def __init__(self, data_root, slices):
-        path_1, path_2 = ['{}/s{}/MCUFFT_Param.mat'.format(data_root, slices), '{}/s{}/sts'.format(data_root, slices)]
         self.param = load_mri(data_root, slices)
         self.y = self.param['param_y']
         self.recon_mcnufft = mtimes(self.param, self.y, adjoint=True)
