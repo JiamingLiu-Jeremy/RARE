@@ -19,7 +19,7 @@ It is better to use Conda for installation of all dependecies.
 to demonstrate the performance of RARE with freath-breath 4D MRI, you can run the RARE by typing
 
 ```
-$ python demo_demo_RARE.py
+$ python demo_RARE.py
 ```
 
 To try with different settings, please open the script and follow the instruction inside.
