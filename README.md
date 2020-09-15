@@ -23,13 +23,13 @@ $ python demo_RARE.py
 ```
 
 To try with different settings, please open the script and follow the instruction inside.
-The efficient GPU implementation of the measurement operator will coming soon.
+The efficient Gpu implementation of the measurement operator will coming soon.
 
 ### CNN model
 We also provide the artifact-to-artifact (A2A) convolutional neural network (cooming soon). The pre-trained models are stored under the /models folder. Feel free to download and test it.
 
 ### Citation
-J. Liu, Y. Sun, C. Eldeniz, W. Gan, H. An, and U. S. Kamilov, Â“Rare: Image reconstruction using deep priors learned without ground truth,Â” IEEE Journal of Selected Topics in Signal Processing, pp. 1Â–1, 2020.
+J. Liu, Y. Sun, C. Eldeniz, W. Gan, H. An, and U. S. Kamilov, “Rare: Image reconstruction using deep priors learned without ground truth,” IEEE Journal of Selected Topics in Signal Processing, pp. 1–1, 2020.
 ```
 @ARTICLE{Liu.etal2020,
   author={J. {Liu} and Y. {Sun} and C. {Eldeniz} and W. {Gan} and H. {An} and U. S. {Kamilov}},
