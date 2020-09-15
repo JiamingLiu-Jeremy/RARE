@@ -23,7 +23,7 @@ $ python demo_RARE.py
 ```
 
 To try with different settings, please open the script and follow the instruction inside.
-The efficient Gpu implementation of the measurement operator will coming soon.
+The efficient GPU implementation of the measurement operator will coming soon.
 
 ### CNN model
 We also provide the artifact-to-artifact (A2A) convolutional neural network (cooming soon). The pre-trained models are stored under the /models folder. Feel free to download and test it.
