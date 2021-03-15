@@ -35,14 +35,14 @@ or
 $ python demo_RARE_torch.py
 ```
 
-The per iteration results will be stored in the /Results folder. The torch-mcnufft is a more efficient implementation using gpu backend. (Thanks [wjgancn](https://github.com/wjgancn) for his help in pytorch-mcnufft.)
+The per iteration results will be stored in the ./Results folder. The torch-mcnufft is a more efficient implementation using gpu backend. (Thanks [wjgancn](https://github.com/wjgancn) for his help in pytorch-mcnufft.)
 
 Visual results of RARE
 ----------
 ![visualExamples](figs/rare.png "Visual illustration of reconstructed images of RARE")
 
 ### CNN model
-We will also provide the training code for artifact-to-artifact (A2A) convolutional neural network (cooming soon). The pre-trained models are stored under the /models folder. Feel free to download and test it.
+We will also provide the training code for artifact-to-artifact (A2A) convolutional neural network (cooming soon). The pre-trained models are stored under the ./models folder. Feel free to download and test it.
 
 ### Citation
 J. Liu, Y. Sun, C. Eldeniz, W. Gan, H. An, and U. S. Kamilov, “Rare: Image reconstruction using deep priors learned without ground truth,” IEEE Journal of Selected Topics in Signal Processing, pp. 1–1, 2020.
