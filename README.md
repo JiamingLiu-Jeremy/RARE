@@ -42,7 +42,7 @@ Visual results of RARE
 ![visualExamples](figs/rareVSn2n.png "Visual illustration of reconstructed images of RARE")
 
 ### CNN model
-We will also provide the training code for artifact-to-artifact (A2A) convolutional neural network (cooming soon). The pre-trained models are stored under the ./models folder. Feel free to download and test it.
+The training code for artifact-to-artifact (A2A) convolutional neural network is coming soon. The pre-trained models are stored under the ./models folder. Feel free to download and test it.
 
 ### Citation
 If you find the paper useful in your research, please cite the paper:
