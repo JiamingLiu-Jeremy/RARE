@@ -32,8 +32,8 @@ def main():
     ####              Slice Optimization             ###
     ####################################################
     tau = 0.34
-    numIter = 10
-    backtracking = True
+    numIter = 6
+    backtracking = False
     num_spokes = '400'
     reg_mode = 'RED'
     num_slices = [25]
