@@ -45,8 +45,8 @@ Visual results of RARE
 We will also provide the training code for artifact-to-artifact (A2A) convolutional neural network (cooming soon). The pre-trained models are stored under the ./models folder. Feel free to download and test it.
 
 ### Citation
-J. Liu, Y. Sun, C. Eldeniz, W. Gan, H. An, and U. S. Kamilov, Rare: Image reconstruction using deep priors learned without ground truth, IEEE Journal of Selected Topics in Signal Processing, pp. 11, 2020.
-```
+If you find the paper useful in your research, please cite the paper:
+```BibTex
 @ARTICLE{Liu.etal2020,
   author={J. {Liu} and Y. {Sun} and C. {Eldeniz} and W. {Gan} and H. {An} and U. S. {Kamilov}},
   journal={IEEE Journal of Selected Topics in Signal Processing}, 
