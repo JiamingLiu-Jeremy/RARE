@@ -1,21 +1,7 @@
-# tf_unet is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# tf_unet is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with tf_unet.  If not, see <http://www.gnu.org/licenses/>.
-
-
 '''
-Modified on Feb, 2018 based on the work of jakeret
+Modified on Feb, 2020 based on the work of Yu Sun
 
-author: yusun
+author: Jiaming Liu
 '''
 from __future__ import print_function, division, absolute_import, unicode_literals
 from scipy.optimize import fminbound
@@ -24,10 +10,7 @@ import scipy.io as sio
 import scipy.misc as smisc
 import imageio
 
-
-
 evaluatepsnr = lambda xtrue, x: 10*np.log10(1/np.mean((xtrue.flatten('F')-x.flatten('F'))**2))
-
 
 def to_rgb(img):
     """
@@ -50,9 +33,14 @@ def to_rgb(img):
     img *= 255
     return img
 
-def to_double_cnn(img_norm):
+def to_double_each(img_norm):
+    """
+    Normalize img to 0~1.
+    Calculate min and max per phase.
+    :param img_norm: img to normalize
+    """    
     img = img_norm.copy()
-    if len(img.shape) == 3: # img.shape = nx*ny*nz
+    if len(img.shape) == 3: # img.shape = nx*ny*np
         img[np.isnan(img)] = 0
         img_amin = np.tile(np.amin(img,axis=(0,1),keepdims=True),[img.shape[0],img.shape[1],1])
         img -= img_amin
@@ -63,8 +51,13 @@ def to_double_cnn(img_norm):
         exit()
     return img,img_amin,img_amax
 
-def to_double(img, clip=False):
-    
+def to_double_all(img, clip=False):
+    """
+    Normalize img to 0~1.
+    Calculate min and max over 10 phases.
+    :param img_norm: img to normalize
+    :param clip: clip to 0 ~ INF
+    """     
     img_norm = img.copy()
     img_norm = np.clip(img_norm,0,np.inf) if clip else img_norm
     if len(img.shape) == 3: # img.shape = nx*ny*nz
@@ -79,7 +72,6 @@ def to_double(img, clip=False):
         img_norm -= img_norm_amin
         img_norm_amax = np.amax(img_norm, keepdims=True)
         img_norm /= img_norm_amax
-
     return img_norm, img_norm_amin, img_norm_amax
 
 def save_mat(img, path):
@@ -100,11 +92,19 @@ def save_img(img, path):
     :param img: the rgb image to save
     :param path: the target path
     """
-    # img = img[:,:,1]
     img = to_rgb(img)
     imageio.imwrite(path, img.round().astype(np.uint8))
 
 def addwagon(x,inputSnr):
+
+    """
+    Add AWGN to make the measurements to corresponding SNR.
+    For simulation only.
+    
+    :param x: measurements
+    :param path: inputSnr value
+    """
+
     noiseNorm = np.linalg.norm(x.flatten('F')) * 10^(-inputSnr/20)
     xBool = np.isreal(x)
     real = True
@@ -121,20 +121,34 @@ def addwagon(x,inputSnr):
     return y, noise
 
 def optimizeTau(x, algoHandle, taurange, maxfun=20):
-    # maxfun ~ number of iterations for optimization
 
-    # evaluateSNR = lambda x, xhat: 20*np.log10(np.linalg.norm(x.flatten('F'))/np.linalg.norm(x.flatten('F')-xhat.flatten('F')))
+    """
+    Optimize Tau
+    
+    :param x: reference "ground truth"
+    :param maxfun: ~ number of iterations for optimization
+    """
+
+    
     evaluatepsnr = lambda xtrue, x: 10*np.log10(1/np.mean((xtrue.flatten('F')-x.flatten('F'))**2))
-    fun = lambda tau: -cal_psnr(x,algoHandle(tau)[0])
+    fun = lambda tau: -cal_rPSNR(x,algoHandle(tau)[0])
     tau = fminbound(fun, taurange[0],taurange[1], xtol = 1e-6, maxfun = maxfun, disp = 3)
     return tau
 
-def cal_rPSNR(xref,x, phase=6):
+def cal_rPSNR(xref, x, phase=6):
+
+    """
+    Calculate the relative PSNR to the references
+    
+    :param xref: reference "ground truth"
+    :param x: input images
+    :param phase: phase to be evaluated
+    """
 
     if len(x.shape) == len(xref.shape):
         x_norm = np.abs(x.copy())
-        x_norm,_,_ = to_double(x_norm)
-        x_norm = np.abs(x_norm[160:480,160:480])
+        x_norm,_,_ = to_double_all(x_norm)
+        x_norm = np.abs(x_norm[160:480,160:480]) # crop from 640 to 320.
         x_norm = np.flip(x_norm,axis=1)
         my_psnr = evaluatepsnr(xref[:,:,phase],x_norm[:,:,phase])
     else:

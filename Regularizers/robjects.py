@@ -22,7 +22,7 @@ class RegularizerClass(ABC):
         pass
 
     @abstractmethod
-    def prox(self,z,step,pin):
+    def deartifacts_A2A(self, s, pin, useNoise, clip):
         pass
 
     @abstractmethod
@@ -30,71 +30,6 @@ class RegularizerClass(ABC):
         pass
 
 ############## Regularizer Class ##############
-
-class NNClass(RegularizerClass):
-    def __init__(self, sigSize):
-        self.sigSize = sigSize
-
-    def init(self):
-        p = np.zeros(self.sigSize)
-        return p
-
-    def eval(self,x):
-        return 0
-    
-    def prox(self, z, step, pin, clip, tau):
-        if clip:
-            return np.clip(z,0,np.inf), pin
-        else:
-            return z, pin
-
-
-class TVClass(RegularizerClass):
-    def __init__(self, sigSize, tau, bc='reflexive', bounds=np.array([-math.inf,math.inf]), maxiter=100):
-        self.sigSize = sigSize
-        self.tau = tau
-        self.bc = bc
-        self.bounds = bounds
-        self.maxiter = maxiter
-
-    def init(self):
-        p = np.zeros((self.sigSize[0],self.sigSize[1],2))
-        return p
-
-    def eval(self,x):
-        filter1 = np.array([[0],[-1],[1]])
-        filter2 = np.array([[0,-1,1]])
-        dx = scipy.ndimage.filters.correlate(x,filter1,mode='wrap')
-        dy = scipy.ndimage.filters.correlate(x,filter2,mode='wrap')
-        r = self.tau*np.sum(np.sum(np.sqrt(np.power(np.absolute(dx),2)+np.power(np.absolute(dy),2))))
-        return r
-    
-    def prox(self,z,step,pin):
-        [x, pout, _, _] = denoiseTV(z,step*self.tau, pin, bc=self.bc, maxiter=self.maxiter, bounds=self.bounds)
-        return x,pout
-
-
-class L1Class(RegularizerClass):
-    def __init__(self, sigSize, tau):
-        self.sigSize = sigSize
-        self.tau = tau
-    
-    def init(self):
-        p = np.zeros(self.sigSize)
-        return p
-
-    def eval(self,x):
-        r = self.tau * np.linalg.norm(x.flatten('F'), 1)
-        return r
-    
-    def prox(self,z,step,pin):
-        norm_z = np.absolute(z)
-        amp = max(norm_z-step*self.tau, 0)
-        norm_z[norm_z <= 0] = 1
-        x = np.multiply(np.divide(amp, norm_z), z)
-        pout = pin
-        return x,pout
-
 class DnCNN3DClass(RegularizerClass):
     """
     A unet implementation
@@ -115,13 +50,13 @@ class DnCNN3DClass(RegularizerClass):
         # reused variables
         self.nx = sigSize[0]
         self.ny = sigSize[1]
-        self.nz = sigSize[2]
+        self.np = sigSize[2]
 
 
-        self.model = dncnn(input_shape=(self.nz, self.nx, self.ny, self.truth_channels), output_channel=self.truth_channels)#self.model = unet_3d(input_shape=(self.nz, self.nx, self.ny, self.truth_channels), output_channel=self.truth_channels)#
+        self.model = dncnn(input_shape=(self.np, self.nx, self.ny, self.truth_channels), output_channel=self.truth_channels)
         self.model.summary()
         # placeholders for input x
-        self.x = tf.placeholder("float", shape=[None, self.nz, self.nx, self.ny, self.truth_channels]) 
+        self.x = tf.placeholder("float", shape=[None, self.np, self.nx, self.ny, self.truth_channels]) 
         # variables need to be calculated
         self.recons = self.model(self.x)
         self.vars = self._get_vars()
@@ -141,22 +76,22 @@ class DnCNN3DClass(RegularizerClass):
         return lst_vars
 
     def init(self):
-        p = np.zeros([self.nx, self.ny])
+        p = np.zeros([self.nx, self.ny, self.np], dtype=np.complex128)
         return p
 
     def deartifacts_A2A(self, s, pin=None, useNoise=False, clip=False):
         s_abs = np.abs(s)
         s_phase = np.angle(s)
-        s_norm, s_abs_min, s_abs_max  = to_double_cnn(s_abs)
+        s_norm, s_abs_min, s_abs_max  = to_double_all(s_abs)
         s_norm = s_norm * np.exp(1j*s_phase)
         stemp = s_norm.transpose([2,0,1])
         if len(s.shape) == 3:
             # reshape
             num_real,num_imag = [1,1]
             stemp = np.expand_dims(np.expand_dims(stemp,axis=0),axis=4)
-            stemp_multi = np.concatenate((stemp.real*num_real,stemp.imag*num_imag),axis=4)           
+            stemp_multi = np.concatenate((stemp.real*num_real,stemp.imag*num_imag),axis=4)       
             xtemp = self.sess.run(self.recons, feed_dict={self.x: stemp_multi, 
-                                                            k.learning_phase(): 0})           
+                                                            k.learning_phase(): 0})                                                        
         else:
             print('Incorrect s.shape')
             exit()
@@ -171,45 +106,11 @@ class DnCNN3DClass(RegularizerClass):
             noise = (s - xtemp)
         return noise
 
-    def prox(self, s, step, pin, clip=False, tau=0.001):
-
-        s_abs = np.abs(s)
-        s_phase = np.angle(s)
-
-        if clip:
-            s_abs = np.clip(s_abs,0,np.inf)
-        else:
-            pass
-        s_abs_temp = s_abs.transpose([2,0,1])
-        s_abs_temp_max =  np.amax(s_abs_temp,axis=(1,2))
-        s_abs_temp_min =  np.amin(s_abs_temp,axis=(1,2))
-        s_abs_temp_max = np.tile(s_abs_temp_max[:, None, None],(1,640,640))
-        s_abs_temp_min = np.tile(s_abs_temp_min[:, None, None],(1,640,640))
-        if len(s.shape) == 2:
-            # reshape
-            s = np.expand_dims(np.expand_dims(s, axis=-1),axis=0)
-            xtemp = self.sess.run(self.recons, feed_dict={self.x: s, 
-                                                    self.keep_prob: prob, 
-                                                    self.phase: phase})
-        elif len(s.shape) == 3:
-            # reshape
-            s_abs_temp_norm = (s_abs_temp - s_abs_temp_min) /  (s_abs_temp_max - s_abs_temp_min)
-            s_abs_temp_norm = np.expand_dims(np.expand_dims(s_abs_temp_norm,axis=0),axis=4)
-            s_abs_temp = np.expand_dims(np.expand_dims(s_abs_temp,axis=0),axis=4)
-            xtemp = self.sess.run(self.recons, feed_dict={self.x: s_abs_temp, 
-                                                            k.learning_phase(): 0})           
-        else:
-            print('Incorrect s.shape')
-            exit()
-        xtemp = xtemp.squeeze().transpose([1,2,0])
-        xtemp = (s_abs - xtemp) * np.exp(1j * s_phase)
-        return xtemp, pin
-
     def eval(self, x):
         return 0
 
     def name(self):
-        return 'DnCNN'
+        return 'A2A'
 
     def restore(self, sess, model_path):
         """
