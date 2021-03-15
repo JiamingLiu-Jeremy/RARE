@@ -14,7 +14,7 @@ tensorflow 1.10~1.13
 Windows 10 or Linux
 Jiaming Liu (jiamingliu.jeremy@gmail.com)
 github: https://github.com/wustl-cig/RARE
-I cannot share with you the entire dataset due to the WUSTL's police. 
+I cannot share with you the entire dataset due to WUSTL's police. 
 The data in this file is only for demonstration purpose.  If you have 
 any questions, please feel free to contact with me.
 By Jiaming Liu (16/Jul/2020)
