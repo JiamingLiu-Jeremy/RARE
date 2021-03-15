@@ -2,19 +2,18 @@
 import os
 import time
 import shutil
-from tqdm.auto import tqdm, trange
 import warnings
 import numpy as np
 import scipy.io as sio
-import tensorflow as tf
 from numpy import linalg as LA
+from tqdm.auto import tqdm, trange
 # scripts
 import util
 
 ######## Iterative Methods #######
 
 def RARE(dObj, rObj, tau = 0.001, numIter=100, step=100, beta=1e-3, Lipz_total=1, backtracking=True, 
-         backtotl=1,  accelerate=False, mode='RED', useNoise=True, is_save=True,save_mat=False,save_path='result', 
+         backtotl=1,  accelerate=False, mode='RED', useNoise=True, is_save=True, save_mat=False, save_path='result', 
          xref=None, xinit=None, clip=False, if_complex='complex', save_iter=5):
     """
     Regularized by artifacts removal methods with switch for RED, PGM, Grad
@@ -33,6 +32,7 @@ def RARE(dObj, rObj, tau = 0.001, numIter=100, step=100, beta=1e-3, Lipz_total=1
     mode           ~ RED update, PROX, or Grad update
     useNoise.      ~ CNN predict noise or image
     is_save        ~ if true save the reconstruction of each iteration
+    save_mat       ~ if save .mat file
     save_path      ~ the save path for is_save
     xref           ~ the CS2000 of the image, for tracking purpose
     if_complex     ~ Use complex number
